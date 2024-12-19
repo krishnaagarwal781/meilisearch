@@ -16,7 +16,7 @@ const SearchPage = () => {
           host: "https://meli.catax.me",
           apiKey: "1f194588dd75addc57ce54e46320c0f56b7858c4b6b42cee92beb88a55fe0b72",
         });
-        const index = client.index("MoviesCatax");
+        const index = client.index("gaurav_catax");
         const response = await index.search(searchTerm);
         setSearchResults(response.hits);
       } catch (error) {
@@ -51,7 +51,7 @@ const SearchPage = () => {
         <div className="overflow-scroll w-96 h-96">
           {searchResults.map((result) => (
             <div key={result.objectID} className="flex items-center justify-between p-2">
-              <p>{result.title}</p>
+              <p>{result.symbol}</p>
               <Image
                 src={result.poster}
                 alt={result.title}

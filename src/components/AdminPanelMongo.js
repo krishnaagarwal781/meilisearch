@@ -1,16 +1,20 @@
 import React, { useState } from "react";
 import { MeiliSearch } from "meilisearch";
-import assetList from "./asset-list.json";
-const AdminPanel = () => {
+import axios from 'axios';
+
+const AdminPanelMongo = () => {
   const [indexName, setIndexName] = useState("");
   const [isLoadingCreate, setIsLoadingCreate] = useState(false);
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
   const [createError, setCreateError] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [mongoData, setMongoData] = useState(null);
   const [file, setFile] = useState(null);
+
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
+
   const handleCreateIndex = async () => {
     if (!indexName) {
       setCreateError("Please enter an index name.");
@@ -22,11 +26,11 @@ const AdminPanel = () => {
 
     try {
       const client = new MeiliSearch({
-        host: "https://search.billbox.app",
+        host: "https://meli.catax.me",
         apiKey:
-          "xdpyfdxdpyfd",
+          "1f194588dd75addc57ce54e46320c0f56b7858c4b6b42cee92beb88a55fe0b72",
       });
-      await client.createIndex(indexName, { primaryKey: "id" });
+      await client.createIndex(indexName, { primaryKey: "_id" });
       console.log(`Index '${indexName}' created successfully.`);
     } catch (error) {
       setCreateError(error.message);
@@ -34,34 +38,38 @@ const AdminPanel = () => {
       setIsLoadingCreate(false);
     }
   };
+
   const handleAddDocuments = async () => {
     try {
-      if (!file) {
-        console.error("No file selected.");
+      if (!mongoData.length) {
+        console.error("No data fetched from MongoDB.");
         return;
       }
-  
+
       const client = new MeiliSearch({
-        host: "https://search.billbox.app",
+        host: "https://meli.catax.me",
         apiKey:
-          "xdpyfdxdpyfd",
+          "1f194588dd75addc57ce54e46320c0f56b7858c4b6b42cee92beb88a55fe0b72",
       });
-  
+
       const index = client.index(indexName);
-  
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const data = JSON.parse(event.target.result);
-        console.log("Parsed data:", data); // Log parsed data
-        await index.addDocuments(data);
-        console.log("Documents added successfully.");
-      };
-      reader.readAsText(file);
+
+      await index.addDocuments(mongoData);
+      console.log("Documents added successfully.");
     } catch (error) {
       console.error("Error adding documents:", error);
     }
   };
-  
+
+  const fetchDataFromMongo = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/users');
+      setMongoData(response.data.assets);
+      console.log(response.data.assets)
+    } catch (error) {
+      console.error("Error fetching data from MongoDB:", error);
+    }
+  };
 
   const handleDeleteIndex = async () => {
     if (!indexName) {
@@ -86,7 +94,6 @@ const AdminPanel = () => {
       setIsLoadingDelete(false);
     }
   };
-
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded shadow-md">
@@ -129,11 +136,16 @@ const AdminPanel = () => {
       <div className="mt-4 flex space-x-4">
         <button
           className={`flex-1 px-4 py-2 text-white rounded bg-green-500 hover:bg-green-600`}
+          onClick={fetchDataFromMongo}
+        >
+          Fetch Data From MongoDB
+        </button>
+        <button
+          className={`flex-1 px-4 py-2 text-white rounded bg-green-500 hover:bg-green-600`}
           onClick={handleAddDocuments}
         >
-          Add Documents
+          Add Documents from MongoDB
         </button>
-        {/* Update Documents button */}
       </div>
       {createError && (
         <div className="text-red-500 mt-2">
@@ -149,4 +161,4 @@ const AdminPanel = () => {
   );
 };
 
-export default AdminPanel;
+export default AdminPanelMongo;
